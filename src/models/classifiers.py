@@ -30,7 +30,7 @@ class PLSDAClassifier(BaseEstimator, ClassifierMixin):
         self.pls = None
 
     def fit(self, X: np.ndarray, y: np.ndarray):
-        y_enc = self.le.fit_transform(y)
+        y_enc = self.le.fit_transform(y).astype(int)
         n_classes = len(self.le.classes_)
         # One-hot
         Y = np.eye(n_classes)[y_enc]

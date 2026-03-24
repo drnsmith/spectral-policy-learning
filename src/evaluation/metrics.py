@@ -110,20 +110,30 @@ def make_reward_fn(
         classifier_kwargs = {}
 
     def reward_fn(X_train, y_train, X_val, y_val):
-        clf = classifier_cls(**classifier_kwargs)
-        clf.fit(X_train, y_train)
-
-        if metric == "auc":
-            proba = clf.predict_proba(X_val)
-            return compute_auc(y_val, proba, labels=clf.classes_)
-        elif metric == "accuracy":
-            y_pred = clf.predict(X_val)
-            return compute_accuracy(y_val, y_pred)
-        elif metric == "f1":
-            y_pred = clf.predict(X_val)
-            return compute_f1(y_val, y_pred)
-        else:
-            raise ValueError(f"Unknown metric: {metric!r}")
+        mask_tr  = np.isfinite(X_train).all(axis=1)
+        mask_val = np.isfinite(X_val).all(axis=1)
+        X_train, y_train = X_train[mask_tr], y_train[mask_tr]
+        X_val,   y_val   = X_val[mask_val],  y_val[mask_val]
+        if (len(X_train) < 10 or len(X_val) < 2
+                or len(np.unique(y_train)) < 2
+                or len(np.unique(y_val)) < 2):
+            return 0.0
+        try:
+            clf = classifier_cls(**classifier_kwargs)
+            clf.fit(X_train, y_train)
+            if metric == "auc":
+                proba = clf.predict_proba(X_val)
+                return compute_auc(y_val, proba, labels=clf.classes_)
+            elif metric == "accuracy":
+                y_pred = clf.predict(X_val)
+                return compute_accuracy(y_val, y_pred)
+            elif metric == "f1":
+                y_pred = clf.predict(X_val)
+                return compute_f1(y_val, y_pred)
+            else:
+                raise ValueError(f"Unknown metric: {metric!r}")
+        except Exception:
+            return 0.0
 
     return reward_fn
 
