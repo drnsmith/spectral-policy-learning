@@ -1,0 +1,78 @@
+# =============================================================================
+# spectral-policy-learning — configuration
+# =============================================================================
+# Change dataset_path to point at your Raman spectra CSV.
+# Everything else reads from this file — no code changes needed.
+#
+# Data format:
+#   CSV with spectral columns (wavenumber values as headers, e.g. 150.0–3425.0)
+#   and one target column 'label' (compound identity).
+#   Matches the format in spectral-drug-verification.
+# =============================================================================
+
+data:
+  dataset_path: "data/raw/raman_spectra_api_compounds.csv"
+  label_column: "label"
+  wavenumber_min: 150.0
+  wavenumber_max: 3425.0
+  test_split: 0.20
+  val_split: 0.20
+  random_seed: 42
+
+# -----------------------------------------------------------------------------
+# Preprocessing action space
+# The RL agent selects one action per search step.
+# A6 = current fixed pipeline in spectral-drug-verification (static baseline).
+# -----------------------------------------------------------------------------
+preprocessing:
+  actions:
+    A0: "raw"
+    A1: "snv"
+    A2: "baseline_correction"
+    A3: "savitzky_golay"
+    A4: "first_derivative"
+    A5: "second_derivative"
+    A6: "snv_second_derivative"        # static baseline
+    A7: "snv_savitzky_golay"
+    A8: "restricted_window"
+  static_baseline_id: 6
+
+# -----------------------------------------------------------------------------
+# Model — Random Forest as default for spectral data
+# -----------------------------------------------------------------------------
+model:
+  type: "random_forest"
+  n_estimators: 200
+  max_depth: null
+  random_state: 42
+
+# -----------------------------------------------------------------------------
+# Training
+# -----------------------------------------------------------------------------
+training:
+  n_folds: 5
+
+# -----------------------------------------------------------------------------
+# RL policy search
+# -----------------------------------------------------------------------------
+rl:
+  search_steps: 20
+  inner_folds: 3
+  gamma: 0.9
+  alpha: 0.1
+  epsilon_start: 0.3
+  epsilon_end: 0.05
+  epsilon_decay: 0.92
+  metric_low_threshold: 0.85
+  metric_high_threshold: 0.95
+  # "macro_f1" | "balanced_accuracy" | "roc_auc_ovr"
+  reward_metric: "macro_f1"
+
+# -----------------------------------------------------------------------------
+# Outputs
+# -----------------------------------------------------------------------------
+evaluation:
+  results_dir: "results"
+  figures_dir: "results/figures"
+  reports_dir: "results/reports"
+  checkpoints_dir: "results/checkpoints"
