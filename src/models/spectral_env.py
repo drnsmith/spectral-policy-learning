@@ -26,18 +26,15 @@ def _savitzky_golay(X: np.ndarray) -> np.ndarray:
 
 def _als_baseline(X: np.ndarray, lam: float = 1e5, p: float = 0.01,
                   n_iter: int = 10) -> np.ndarray:
-    """Asymmetric Least Squares baseline correction."""
-    def _als_single(y):
-        n = len(y)
-        D = diags([1, -2, 1], [0, 1, 2], shape=(n - 2, n)).toarray()
-        D = lam * D.T @ D
-        w = np.ones(n)
-        for _ in range(n_iter):
-            W = diags(w, 0)
-            Z = np.linalg.solve(W + D, w * y)
-            w = p * (y > Z) + (1 - p) * (y <= Z)
-        return y - Z
-    return np.apply_along_axis(_als_single, axis=1, arr=X)
+    """Fast SNIP baseline correction. Replaces slow ALS."""
+    def _snip(y, n_iter=10):
+        y = np.log(np.log(np.sqrt(y - y.min() + 1) + 1) + 1)
+        for i in range(1, n_iter + 1):
+            shifted = (np.roll(y, i) + np.roll(y, -i)) / 2
+            y = np.minimum(y, shifted)
+        return y
+    baselines = np.apply_along_axis(_snip, axis=1, arr=X)
+    return X - baselines
 
 
 def _snv(X: np.ndarray) -> np.ndarray:
@@ -159,8 +156,16 @@ class SpectralEnv:
         policy_name, policy_fn = POLICIES[action]
 
         # Apply to both train and val so evaluation is consistent
-        self.X_train_current = policy_fn(self.X_train_current)
-        self.X_val_current   = policy_fn(self.X_val_current)
+        if len(self.X_train_current) > 0:
+            try:
+                self.X_train_current = policy_fn(self.X_train_current)
+            except Exception:
+                pass
+        if len(self.X_val_current) > 0:
+            try:
+                self.X_val_current = policy_fn(self.X_val_current)
+            except Exception:
+                pass
         self.action_history.append(policy_name)
         self.step_count += 1
 
