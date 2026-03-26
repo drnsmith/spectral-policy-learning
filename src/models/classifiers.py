@@ -72,15 +72,21 @@ class SVMClassifier(BaseEstimator, ClassifierMixin):
         self.le = LabelEncoder()
 
     def fit(self, X: np.ndarray, y: np.ndarray):
+        from sklearn.decomposition import PCA
+        self.pca = PCA(n_components=min(50, X.shape[1], X.shape[0]-1))
+        X = self.pca.fit_transform(X)
         y_enc = self.le.fit_transform(y)
         self.model.fit(X, y_enc)
         return self
 
+    def _transform(self, X):
+        return self.pca.transform(X) if hasattr(self, "pca") else X
+
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
-        return self.model.predict_proba(X)
+        return self.model.predict_proba(self._transform(X))
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        y_enc = self.model.predict(X)
+        y_enc = self.model.predict(self._transform(X))
         return self.le.inverse_transform(y_enc)
 
     @property
