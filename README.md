@@ -1,25 +1,20 @@
-# spectral-policy-learning
-
-**Adaptive preprocessing policy search via reinforcement learning for
-noisy multiclass Raman spectral classification.**
-
-*Natalya Smith — Independent Researcher, Auckland, New Zealand*
+# Adaptive preprocessing policy search via reinforcement learning for noisy multiclass Raman spectral classification.
 
 ---
 
 ## What this is
 
-This is Paper 2 in a two-paper series on adaptive policy learning for
-noisy high-stakes measurement systems. Paper 1
+This is stage 2 in a two-stages project on adaptive policy learning for
+noisy high-stakes measurement systems. Stage 1
 ([rl-policy-histopathology](https://github.com/drnsmith/rl-policy-histopathology))
 established the framework for image augmentation in histopathology.
 
-This paper re-instantiates the same framework with a different policy
+This project re-instantiates the same framework with a different policy
 object: instead of selecting an image augmentation sub-policy, the RL
 agent selects a **spectral preprocessing pipeline** from a discrete
 action space (SNV, derivatives, baseline correction, etc.).
 
-The central argument is the same as Paper 1: the choice of reward
+The central argument is the same as stage 1: the choice of reward
 metric used to guide the RL agent is a **measurement validity problem**.
 In a multiclass drug verification setting, macro-F1 is argued to be
 the most valid reward instrument because it weights all compound
@@ -102,7 +97,6 @@ python scripts/run_experiment.py --conditions static rl_macro_f1 rl_auc
 *Adaptive Preprocessing Policy Search via Reinforcement Learning for
 Noisy Multiclass Spectral Classification* (preprint forthcoming).
 
-LaTeX skeleton: `paper_skeleton.tex`
 
 ---
 
